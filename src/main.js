@@ -2016,7 +2016,8 @@ renderSun({ sun, language, config } = this) {
   }
 
   const use12HourFormat = this.config.use_12hour_format;
-  const timezone = this.config.sun_timezone
+  const timezone = config.sun_timezone
+    || config.timezone
     || (this._hass && this._hass.config && this._hass.config.time_zone)
     || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const locale = this.config.locale || undefined;
