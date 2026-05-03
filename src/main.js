@@ -2074,7 +2074,24 @@ renderForecastConditionIcons({ config, forecastItems, sun } = this) {
 
         let sunriseTime, sunsetTime;
         if (lat != null && lon != null) {
-          const { sunrise, sunset } = this.calculateSunriseSunset(forecastTime, lat, lon);
+          const configuredTimeZone = this.config.time_zone
+            || (this._hass && this._hass.config && this._hass.config.time_zone);
+          let sunriseSunsetDate = forecastTime;
+
+          if (configuredTimeZone) {
+            const parts = new Intl.DateTimeFormat('en-CA', {
+              timeZone: configuredTimeZone,
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }).formatToParts(forecastTime);
+            const year = Number(parts.find((part) => part.type === 'year').value);
+            const month = Number(parts.find((part) => part.type === 'month').value);
+            const day = Number(parts.find((part) => part.type === 'day').value);
+            sunriseSunsetDate = new Date(Date.UTC(year, month - 1, day));
+          }
+
+          const { sunrise, sunset } = this.calculateSunriseSunset(sunriseSunsetDate, lat, lon);
           sunriseTime = sunrise;
           sunsetTime = sunset;
         } else {
