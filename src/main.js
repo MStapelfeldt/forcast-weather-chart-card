@@ -2035,9 +2035,13 @@ renderSun({ sun, language, config } = this) {
     : (this._hass && this._hass.config && this._hass.config.longitude);
   let sunriseDate, sunsetDate;
   if (lat != null && lon != null) {
-    const { sunrise, sunset } = this.calculateSunriseSunset(new Date(), lat, lon);
-    sunriseDate = sunrise;
-    sunsetDate = sunset;
+    const now = new Date();
+    const { sunrise: todaySunrise, sunset: todaySunset } = this.calculateSunriseSunset(now, lat, lon);
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { sunrise: tomorrowSunrise, sunset: tomorrowSunset } = this.calculateSunriseSunset(tomorrow, lat, lon);
+    sunriseDate = todaySunrise > now ? todaySunrise : tomorrowSunrise;
+    sunsetDate = todaySunset > now ? todaySunset : tomorrowSunset;
   } else {
     sunriseDate = new Date(sun.attributes.next_rising);
     sunsetDate = new Date(sun.attributes.next_setting);
