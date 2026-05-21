@@ -1298,7 +1298,6 @@ var WeatherChartCard = (function () {
       delete newConfig.sun_latitude;
       delete newConfig.sun_longitude;
       delete newConfig.sun_timezone;
-      delete newConfig.timezone;
       this._cityInput = '';
       this._geoStatus = '';
       this.configChanged(newConfig);
@@ -1436,6 +1435,7 @@ var WeatherChartCard = (function () {
       <div class="textfield-container">
 <label class="switch-label">Entity</label>
 <select
+  aria-label="Entity"
   style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid var(--divider-color, #ccc); border-radius: 4px; background: var(--card-background-color, #fff); color: var(--primary-text-color, #000); font-size: 14px;"
   .value=${this._entity}
   @change=${(e) => this._EntityChanged(e, 'entity')}
@@ -1452,6 +1452,7 @@ var WeatherChartCard = (function () {
       <div>
         <label>Select custom language</label>
         <select
+          aria-label="Select custom language"
           style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
           .value=${this._config.locale || ''}
           @change=${(e) => {
@@ -1953,6 +1954,7 @@ var WeatherChartCard = (function () {
           <div>
             <label>Precipitation Type (Probability if supported by the weather entity)</label>
             <select
+              aria-label="Precipitation Type"
               style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
               .value=${forecastConfig.precipitation_type || 'rainfall'}
               @change=${(e) => {
@@ -2017,6 +2019,7 @@ var WeatherChartCard = (function () {
                 <span class="experimental-badge" ?hidden=${(forecastConfig.gradient_mode || 'classic') !== 'adaptive'}>Experimental</span>
               </div>
               <select
+                aria-label="Temperature Gradient Mode"
                 style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
                 .value=${forecastConfig.gradient_mode || 'classic'}
                 @change=${(e) => {
@@ -2032,6 +2035,7 @@ var WeatherChartCard = (function () {
             <div ?hidden=${(forecastConfig.gradient_mode || 'classic') === 'classic'}>
               <label>Climate Preset Range</label>
               <select
+                aria-label="Climate Preset Range"
                 style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
                 .value=${forecastConfig.gradient_preset || 'temperate'}
                 @change=${(e) => {
@@ -2058,6 +2062,7 @@ var WeatherChartCard = (function () {
             <div>
               <label>Convert temperature to</label>
               <select
+                aria-label="Convert temperature to"
                 style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
                 .value=${unitsConfig.temperature || ''}
                 @change=${(e) => {
@@ -2073,6 +2078,7 @@ var WeatherChartCard = (function () {
             <div>
               <label>Convert pressure to</label>
               <select
+                aria-label="Convert pressure to"
                 style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
                 .value=${unitsConfig.pressure || ''}
                 @change=${(e) => {
@@ -2089,6 +2095,7 @@ var WeatherChartCard = (function () {
             <div>
               <label>Convert wind speed to</label>
               <select
+                aria-label="Convert wind speed to"
                 style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
                 .value=${unitsConfig.speed || ''}
                 @change=${(e) => {
@@ -2107,6 +2114,7 @@ var WeatherChartCard = (function () {
             <div>
               <label>Display precipitation unit</label>
               <select
+                aria-label="Display precipitation unit"
                 style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
                 .value=${unitsConfig.precipitation || ''}
                 @change=${(e) => {
@@ -18614,7 +18622,13 @@ var WeatherChartCard = (function () {
       this.windSpeed = this.config.windspeed ? hass.states[this.config.windspeed].state : this.weather.attributes.wind_speed;
       this.dew_point = this.config.dew_point ? hass.states[this.config.dew_point].state : this.weather.attributes.dew_point;
       this.wind_gust_speed = this.config.wind_gust_speed ? hass.states[this.config.wind_gust_speed].state : this.weather.attributes.wind_gust_speed;
-      this.visibility = this.config.visibility ? hass.states[this.config.visibility].state : this.weather.attributes.visibility;
+      if (this.config.visibility && hass.states[this.config.visibility]) {
+        this.visibility = hass.states[this.config.visibility].state;
+        this.visibilitySourceUnit = hass.states[this.config.visibility].attributes.unit_of_measurement || this.weather.attributes.visibility_unit;
+      } else {
+        this.visibility = this.weather.attributes.visibility;
+        this.visibilitySourceUnit = this.weather.attributes.visibility_unit;
+      }
 
       if (this.config.winddir && hass.states[this.config.winddir] && hass.states[this.config.winddir].state !== undefined) {
         this.windDirection = parseFloat(hass.states[this.config.winddir].state);
@@ -18702,6 +18716,13 @@ var WeatherChartCard = (function () {
       return (this.weather.attributes.supported_features & feature) !== 0;
     }
 
+    get _canAutoRotate() {
+      const interval = this.config && this.config.forecast ? parseInt(this.config.forecast.auto_rotate, 10) : 0;
+      return interval > 0 && this.weather
+        && this.supportsFeature(WeatherEntityFeature.FORECAST_DAILY)
+        && this.supportsFeature(WeatherEntityFeature.FORECAST_HOURLY);
+    }
+
     constructor() {
       super();
       this.resizeObserver = null;
@@ -18720,6 +18741,8 @@ var WeatherChartCard = (function () {
       this.stopAutoRotate();
       const interval = this.config && this.config.forecast ? parseInt(this.config.forecast.auto_rotate, 10) : 0;
       if (!interval || interval < 1 || interval > 60) return;
+      // Only rotate if the entity supports both daily and hourly forecasts
+      if (!this.weather || !this.supportsFeature(WeatherEntityFeature.FORECAST_DAILY) || !this.supportsFeature(WeatherEntityFeature.FORECAST_HOURLY)) return;
       // Align to the next whole minute, then start the interval
       const now = new Date();
       const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
@@ -19327,6 +19350,26 @@ var WeatherChartCard = (function () {
     }
 
     return numericValue * fromFactor / toFactor;
+  }
+
+  convertVisibility(value, fromUnit, toUnit) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) {
+      return value;
+    }
+    if (!fromUnit || !toUnit || fromUnit === toUnit) {
+      return numericValue;
+    }
+    // Normalize to meters first
+    const toMeters = { 'm': 1, 'km': 1000, 'mi': 1609.344, 'yd': 0.9144, 'ft': 0.3048 };
+    const fromFactor = toMeters[fromUnit];
+    const toFactor = toMeters[toUnit];
+    if (!fromFactor || !toFactor) {
+      return numericValue;
+    }
+    const result = numericValue * fromFactor / toFactor;
+    // Round to 1 decimal place; drop the decimal if the result is a whole number
+    return Math.round(result * 10) / 10;
   }
 
   async firstUpdated(changedProperties) {
@@ -20302,16 +20345,34 @@ var WeatherChartCard = (function () {
     const showDate = this.config.show_date;
     const currentDate = new Date();
     
-    // Force timezone conversion using explicit formatters
-    const timeFormatter = new Intl.DateTimeFormat(this.config.locale || 'en-US', {
-      hour: showHourLeadingZero ? '2-digit' : 'numeric',
+    // Build the full time string using Intl.DateTimeFormat, then fix the hour for leading zero control
+    const locale = this.config.locale || 'en-US';
+    const timeFormatter = new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
       minute: '2-digit',
       second: showSeconds ? '2-digit' : undefined,
       hour12: use12HourFormat,
       timeZone: timezone
     });
-    
-    const currentTime = timeFormatter.format(currentDate);
+    const parts = timeFormatter.formatToParts(currentDate);
+
+    // Rebuild the time string, adjusting the hour part for leading zero preference
+    var currentTime = '';
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      if (part.type === 'hour') {
+        var h = part.value;
+        if (showHourLeadingZero && h.length === 1) {
+          h = '0' + h;
+        } else if (!showHourLeadingZero && h.length === 2 && h[0] === '0') {
+          h = h.slice(1);
+        }
+        currentTime += h;
+      } else {
+        currentTime += part.value;
+      }
+    }
+
     const currentDayOfWeek = this.getLocalizedDayNameFull(currentDate, timezone);
     const selectedLocale = this.config.locale || this.language || 'en';
     const currentDateFormatted = new Intl.DateTimeFormat(selectedLocale, {
@@ -20368,8 +20429,8 @@ var WeatherChartCard = (function () {
       ${config.show_forecast_toggle ? x`
         <button class="forecast-toggle"
           @click="${this.handleForecastTypeToggle.bind(this)}"
-          ?disabled="${parseInt(config.forecast.auto_rotate, 10) > 0}">
-          ${parseInt(config.forecast.auto_rotate, 10) > 0 ? `Auto [${parseInt(config.forecast.auto_rotate, 10)}]` : (this.config.forecast.type === 'daily' ? 'Hourly' : 'Daily')}
+          ?disabled="${this._canAutoRotate}">
+          ${this._canAutoRotate ? `Auto [${parseInt(config.forecast.auto_rotate, 10)}]` : (this.config.forecast.type === 'daily' ? 'Hourly' : 'Daily')}
         </button>
       ` : ''}
     </div>
@@ -20433,10 +20494,15 @@ var WeatherChartCard = (function () {
     const showDewpoint = config.show_dew_point == true;
     const showWindgustspeed = config.show_wind_gust_speed == true;
     const showVisibility = config.show_visibility == true;
+    const visibilityDisplayUnit = this.unitVisibility || this.visibilitySourceUnit || (this.weather && this.weather.attributes.visibility_unit);
+    let dVisibility = visibility;
+    if (showVisibility && visibility !== undefined) {
+      dVisibility = this.convertVisibility(visibility, this.visibilitySourceUnit, visibilityDisplayUnit);
+    }
 
   return x`
     <div class="attributes">
-      ${((showHumidity && humidity !== undefined) || (showPressure && dPressure !== undefined) || (showDewpoint && dew_point !== undefined) || (showVisibility && visibility !== undefined)) ? x`
+      ${((showHumidity && humidity !== undefined) || (showPressure && dPressure !== undefined) || (showDewpoint && dew_point !== undefined) || (showVisibility && dVisibility !== undefined)) ? x`
         <div>
           ${showHumidity && humidity !== undefined ? x`
             <ha-icon icon="hass:water-percent"></ha-icon> ${humidity} %<br>
@@ -20447,8 +20513,8 @@ var WeatherChartCard = (function () {
           ${showDewpoint && dew_point !== undefined ? x`
             <ha-icon icon="hass:thermometer-water"></ha-icon> ${dDewPoint} ${dewPointDisplayUnit} <br>
           ` : ''}
-          ${showVisibility && visibility !== undefined ? x`
-            <ha-icon icon="hass:eye"></ha-icon> ${visibility} ${this.weather.attributes.visibility_unit}
+          ${showVisibility && dVisibility !== undefined ? x`
+            <ha-icon icon="hass:eye"></ha-icon> ${dVisibility} ${visibilityDisplayUnit}
           ` : ''}
         </div>
       ` : ''}
