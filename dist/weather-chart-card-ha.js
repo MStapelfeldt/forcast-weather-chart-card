@@ -18911,35 +18911,45 @@ var WeatherChartCard = (function () {
     return null;
   }
 
+  formatLocalizedShortDateLabel(label, locale) {
+    const normalizedLabel = label.replace(/[.\s]+$/u, '');
+    return WeatherChartCard.LATIN_SCRIPT_REGEX.test(normalizedLabel)
+      ? normalizedLabel.toLocaleUpperCase(locale)
+      : normalizedLabel;
+  }
+
   getLocalizedDayName(date, timezone) {
     const dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
-    // Priority 1: Try translation array from locale.js
-    const days = this.getLocaleArray('days');
-    if (days && days[dayIndex] && typeof days[dayIndex] === 'string' && days[dayIndex].length > 0) {
-      const dayName = days[dayIndex].substring(0, 3);
-      // Only uppercase for Latin-script languages
-      return WeatherChartCard.LATIN_SCRIPT_REGEX.test(dayName) ? dayName.toUpperCase() : dayName;
+    // Priority 1: Try dedicated short day translation array from locale.js
+    const shortDays = this.getLocaleArray('days_short');
+    if (shortDays && shortDays[dayIndex] && typeof shortDays[dayIndex] === 'string' && shortDays[dayIndex].length > 0) {
+      return this.formatLocalizedShortDateLabel(shortDays[dayIndex], this.config.locale || this.language || 'en');
     }
     
-    // Priority 2: Browser Intl fallback
+    // Priority 2: Browser Intl localized short weekday name
     try {
       const selectedLocale = this.config.locale || this.language || 'en';
       const dayFormatter = new Intl.DateTimeFormat(selectedLocale, {
-        weekday: 'long',
+        weekday: 'short',
         timeZone: timezone
       });
       const formatted = dayFormatter.format(date);
       if (formatted && formatted.length > 0) {
-        const dayName = formatted.substring(0, 3);
-        // Only uppercase for Latin-script languages
-        return WeatherChartCard.LATIN_SCRIPT_REGEX.test(dayName) ? dayName.toUpperCase() : dayName;
+        return this.formatLocalizedShortDateLabel(formatted, selectedLocale);
       }
     } catch (e) {
-      // Intl failed, continue to ultimate fallback
+      // Intl failed, continue to translation-array fallback
+    }
+
+    // Priority 3: Try full day translation array from locale.js
+    const days = this.getLocaleArray('days');
+    if (days && days[dayIndex] && typeof days[dayIndex] === 'string' && days[dayIndex].length > 0) {
+      const dayName = days[dayIndex].substring(0, 3);
+      return this.formatLocalizedShortDateLabel(dayName, this.config.locale || this.language || 'en');
     }
     
-    // Priority 3: Hardcoded English fallback
+    // Priority 4: Hardcoded English fallback
     const englishDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return englishDays[dayIndex].substring(0, 3).toUpperCase();
   }
@@ -20763,7 +20773,7 @@ var WeatherChartCard = (function () {
   }
 
   // Regex to detect Latin script characters for uppercase formatting (ES2019 compatible)
-  WeatherChartCard.LATIN_SCRIPT_REGEX = /^[A-Za-z]+$/;
+  WeatherChartCard.LATIN_SCRIPT_REGEX = /^\p{Script=Latin}+$/u;
 
   if (!customElements.get('weather-chart-card-ha')) {
     customElements.define('weather-chart-card-ha', WeatherChartCard);
