@@ -490,13 +490,7 @@ formatLocalizedShortDateLabel(label, locale) {
 getLocalizedDayName(date, timezone) {
   const dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
   
-  // Priority 1: Try dedicated short day translation array from locale.js
-  const shortDays = this.getLocaleArray('days_short');
-  if (shortDays && shortDays[dayIndex] && typeof shortDays[dayIndex] === 'string' && shortDays[dayIndex].length > 0) {
-    return this.formatLocalizedShortDateLabel(shortDays[dayIndex], this.config.locale || this.language || 'en');
-  }
-  
-  // Priority 2: Browser Intl localized short weekday name
+  // Priority 1: Browser Intl localized short weekday name
   try {
     const selectedLocale = this.config.locale || this.language || 'en';
     const dayFormatter = new Intl.DateTimeFormat(selectedLocale, {
@@ -511,14 +505,14 @@ getLocalizedDayName(date, timezone) {
     // Intl failed, continue to translation-array fallback
   }
 
-  // Priority 3: Try full day translation array from locale.js
+  // Priority 2: Try full day translation array from locale.js
   const days = this.getLocaleArray('days');
   if (days && days[dayIndex] && typeof days[dayIndex] === 'string' && days[dayIndex].length > 0) {
     const dayName = days[dayIndex].substring(0, 3);
     return this.formatLocalizedShortDateLabel(dayName, this.config.locale || this.language || 'en');
   }
   
-  // Priority 4: Hardcoded English fallback
+  // Priority 3: Hardcoded English fallback
   const englishDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   return englishDays[dayIndex].substring(0, 3).toUpperCase();
 }
