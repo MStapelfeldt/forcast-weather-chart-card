@@ -482,9 +482,12 @@ getLocaleArray(key) {
 
 formatLocalizedShortDateLabel(label, locale) {
   const normalizedLabel = label.replace(/[.\s]+$/u, '');
-  return WeatherChartCard.LATIN_SCRIPT_REGEX.test(normalizedLabel)
-    ? normalizedLabel.toLocaleUpperCase(locale)
-    : normalizedLabel;
+  if (!WeatherChartCard.LATIN_SCRIPT_REGEX.test(normalizedLabel)) return normalizedLabel;
+  try {
+    return normalizedLabel.toLocaleUpperCase(locale);
+  } catch (e) {
+    return normalizedLabel.toUpperCase();
+  }
 }
 
 getLocalizedDayName(date, timezone) {
