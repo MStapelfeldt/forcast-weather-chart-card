@@ -2,6 +2,6 @@
   "name": "Forecast Weather Chart Card",
   "content_in_root": false,
   "render_readme": true,
-  "filename": "forecast-weather-chart-card.js"
+  "filename": "dist/forecast-weather-chart-card.js",
   "homeassistant": "2024.1.0"
 }
